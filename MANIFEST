@@ -1,0 +1,11 @@
+Cached.xs
+Changes
+MANIFEST
+Makefile.PL
+README
+lib/Goto/Cached.pm
+ppport.h
+ptr_table.h
+t/Goto-Cached.t
+t/pod.t
+META.yml                                 Module meta-data (added by MakeMaker)

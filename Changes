@@ -1,0 +1,4 @@
+Revision history for Perl extension Goto::Cached.
+
+0.01  Tue Apr 12 02:03:49 2005
+	- original version; created by h2xs 1.23 with options -n Goto::Cached

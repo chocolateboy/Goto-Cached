@@ -1,0 +1,71 @@
+package Goto::Cached;
+
+use 5.006;
+
+use strict;
+use warnings;
+
+use XSLoader;
+use Scope::Guard;
+
+our $VERSION = '0.01';
+
+XSLoader::load 'Goto::Cached', $VERSION;
+
+sub import {
+	$^H |= 0x20000;
+
+	my $sg = Scope::Guard->new(sub { Goto::Cached::leavescope() });
+
+	Goto::Cached::enterscope();
+
+	$^H{'Goto::Cached'} = 1;
+	$^H{$sg} = $sg;
+}
+
+END { Goto::Cached::cleanup() }
+
+1;
+
+__END__
+
+=head1 NAME
+
+Goto::Cached - an amortized O(1) drop-in replacement for Perl's O(n) goto
+
+=head1 SYNOPSIS
+
+    use Goto::Cached;
+
+	my $label = 'LABEL3';
+
+	goto LABEL1;
+
+	LABEL1: goto $label;
+
+	LABEL2: print "Not reached!", $/;
+
+	LABEL3: print "label3!", $/;
+
+=head1 DESCRIPTION
+
+Goto::Cached provides a fast lexically-scoped drop-in replacement for perl's
+builtin C<goto>. Its use is the same as the builtin. C<goto &sub> is not
+cached.
+
+=head1 SEE ALSO
+
+L<Goto::Line>
+
+=head1 AUTHOR
+
+chocolateboy: <chocolate.boy@email.com>
+
+=head1 COPYRIGHT
+
+Copyright (c) 2005, chocolateboy.
+
+This module is free software. It may be used, redistributed
+and/or modified under the same terms as Perl itself.
+
+=cut
