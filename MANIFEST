@@ -1,11 +1,12 @@
 Cached.xs
 Changes
 MANIFEST
+META.yml
 Makefile.PL
 README
 lib/Goto/Cached.pm
 ppport.h
-ptr_table.h
-t/Goto-Cached.t
+ptable.h
+t/goto.t
 t/pod.t
-META.yml                                 Module meta-data (added by MakeMaker)
+t/use.t

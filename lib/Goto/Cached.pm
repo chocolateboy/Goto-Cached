@@ -8,7 +8,7 @@ use warnings;
 use XSLoader;
 use Scope::Guard;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 XSLoader::load 'Goto::Cached', $VERSION;
 
@@ -37,25 +37,29 @@ Goto::Cached - an amortized O(1) drop-in replacement for Perl's O(n) goto
 
     use Goto::Cached;
 
-	my $label = 'LABEL3';
+    my $label = 'LABEL3';
 
-	goto LABEL1;
+    goto LABEL1;
 
-	LABEL1: goto $label;
+    LABEL1: goto $label;
 
-	LABEL2: print "Not reached!", $/;
+    LABEL2: print "Not reached!", $/;
 
-	LABEL3: print "label3!", $/;
+    LABEL3: print "label3!", $/;
 
 =head1 DESCRIPTION
 
-Goto::Cached provides a fast lexically-scoped drop-in replacement for perl's
+Goto::Cached provides a fast, lexically-scoped drop-in replacement for perl's
 builtin C<goto>. Its use is the same as the builtin. C<goto &sub> is not
 cached.
 
+=head1 VERSION
+
+0.02
+
 =head1 SEE ALSO
 
-L<Goto::Line>
+L<Acme::Goto::Line>
 
 =head1 AUTHOR
 

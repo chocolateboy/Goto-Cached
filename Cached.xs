@@ -3,26 +3,27 @@
 #include "XSUB.h"
 #include "ppport.h"
 
-#include "ptr_table.h"
+#include "ptable.h"
 
-#define GOTO_LABEL_CACHE_STORE(key,len,val)                        						\
-STMT_START {                                    										\
-    if (!hv_store(GOTO_LABEL_CACHE, key, len, newSViv((int)val), 0)) {					\
-		croak("Can't store value in goto cache");										\
-    }                                   												\
+#define GOTO_LABEL_CACHE_STORE(key,len,val) \
+STMT_START { \
+    if (!hv_store(GOTO_LABEL_CACHE, key, len, newSViv((int)val), 0)) {\
+		croak("Can't store value in goto cache"); \
+    } \
 } STMT_END
 
 #define GOTO_LABEL_CACHE_FETCH(key,len) (hv_fetch(GOTO_LABEL_CACHE, key, len, 0))
 
-OP* goto_cached(void);
+OP* goto_cached(pTHX);
+OP *goto_cached_ck_null(pTHX_ OP *o);
 
 static HV *GOTO_LABEL_CACHE = NULL;
-static PTR_TBL_t *GOTO_OP_CACHE = NULL;
+static PTABLE_t *GOTO_OP_CACHE = NULL;
 static char * GOTO_KEY = NULL;
 static size_t GOTO_KEYLEN = 256;
 static U32 GOTO_CACHED_SCOPE_DEPTH = 0;
 
-OP* goto_cached(void) {
+OP* goto_cached(pTHX) {
 	dSP;
 	OP *op;
 	/* char *key = 0; */
@@ -36,19 +37,19 @@ OP* goto_cached(void) {
 
 		if (SvROK(sv) && SvTYPE(SvRV(sv)) == SVt_PVCV) { /* goto &sub */
 			/* Perl_warn(aTHX_ "goto &sub\n"); */
-			return Perl_pp_goto(); /* this is faster than using the cache */
+			return Perl_pp_goto(aTHX); /* this is faster than using the cache */
 			/* Newz(0, key, klen, char); */
 			/* snprintf(key, klen, "%0*lx%0*lx", PTRSIZE * 2, PTR2UV(PL_op), PTRSIZE * 2, PTR2UV(SvRV(sv))); */
 		} else {
 			/* Perl_warn(aTHX_ "goto $label\n"); */
-			klen = PTRSIZE * 2 + 1 + SvCUR(sv);
+			klen = UVSIZE * 2 + 1 + SvCUR(sv);
 			if (klen > GOTO_KEYLEN) {
 				while (klen > GOTO_KEYLEN) {
 					GOTO_KEYLEN = GOTO_KEYLEN * 2;
 				}
 				Renew(GOTO_KEY, GOTO_KEYLEN, char);
 			}
-			snprintf(GOTO_KEY, klen, "%0*lx%s", PTRSIZE * 2, PTR2UV(PL_op), SvPVX(sv));
+			snprintf(GOTO_KEY, klen, "%0*"UVxf"%s", UVSIZE * 2, PTR2UV(PL_op), SvPVX(sv));
 		}
 
 		/* Perl_warn(aTHX_ "key: %s\n", GOTO_KEY); */
@@ -56,24 +57,25 @@ OP* goto_cached(void) {
 
 		if (svp) {
 			/* Perl_warn(aTHX_ "found op\n"); */
-			op = (OP *)SvIVX(*svp);
+			/* op = (OP *)SvIVX(*svp); */
+			op = INT2PTR(OP *, SvIVX(*svp));
 		} else {
 			/* Perl_warn(aTHX_ "computing op\n"); */
-			op = Perl_pp_goto();
+			op = Perl_pp_goto(aTHX);
 			/* bypass the cache if the target is not in scope */
 			if (!PL_lastgotoprobe)
 				GOTO_LABEL_CACHE_STORE(GOTO_KEY, klen, op);
 		}
 
-	} else { /* op has label hardwired - use ptr table keyed on the op */
+	} else { /* op has label hardwired - use ptable keyed on the op */
 		/* Perl_warn(aTHX_ "\nstatic goto\n"); */
-		op = (OP *)ptr_table_fetch(GOTO_OP_CACHE, PL_op);
+		op = (OP *)PTABLE_fetch(GOTO_OP_CACHE, PL_op);
 		if (!op) {
 			/* Perl_warn(aTHX_ "computing op\n"); */
-			op = Perl_pp_goto();
+			op = Perl_pp_goto(aTHX);
 			/* bypass the cache if the target is not in scope */
 			if (!PL_lastgotoprobe)
-				ptr_table_store(GOTO_OP_CACHE, PL_op, op);
+				PTABLE_store(GOTO_OP_CACHE, PL_op, op);
 		}
 	}
 
@@ -99,7 +101,7 @@ PROTOTYPES: ENABLE
 BOOT:
 GOTO_LABEL_CACHE = newHV(); if (!GOTO_LABEL_CACHE) croak ("Can't initialize goto cache");
 HvSHAREKEYS_off(GOTO_LABEL_CACHE); /* we don't need the speed hit of shared keys */
-GOTO_OP_CACHE = ptr_table_new(); 
+GOTO_OP_CACHE = PTABLE_new(); 
 Newz(0, GOTO_KEY, GOTO_KEYLEN, char);
 
 void
@@ -110,7 +112,7 @@ enterscope()
 			++GOTO_CACHED_SCOPE_DEPTH;
 		} else {
 			GOTO_CACHED_SCOPE_DEPTH = 1;
-			/* Perl_warn("inside Goto::Cached::enterscope\n"); */
+			/* Perl_warn(aTHX_ "inside Goto::Cached::enterscope\n"); */
 			PL_check[OP_GOTO] = MEMBER_TO_FPTR(goto_cached_ck_null);
 		}
 
@@ -131,7 +133,7 @@ cleanup()
 	PROTOTYPE:
 	CODE: 
 		/* Perl_warn(aTHX_ "inside Goto::Cached::cleanup\n"); */
-		ptr_table_free(GOTO_OP_CACHE);
+		PTABLE_free(GOTO_OP_CACHE);
 		GOTO_OP_CACHE = NULL;
 		Safefree(GOTO_KEY);
 		GOTO_CACHED_SCOPE_DEPTH = 0;

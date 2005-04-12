@@ -13,7 +13,6 @@ WriteMakefile(
 	AUTHOR			  => 'chocolateboy <chocolate.boy@email.com>',
     LIBS              => [''], # e.g., '-lm'
     DEFINE            => '', # e.g., '-DHAVE_SOMETHING'
-    # OPTIMIZE		  => '-pg -g3 -Wall', # e.g., '-DHAVE_SOMETHING'
-    OPTIMIZE		  => '-g3 -Wall',
+    OPTIMIZE		  => '-O3 -Wall',
     INC               => '-I.', # e.g., '-I. -I/usr/include/other'
 );
