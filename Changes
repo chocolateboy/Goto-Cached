@@ -1,5 +1,8 @@
 Revision history for Perl extension Goto::Cached
 
+0.02  Sat Apr 16 13:43:00 2005
+    -  + L1 cache optimization
+
 0.02  Wed Apr 13 00:50:20 2005
     - compatibility/portability fixes + isolate ptr table from perl's implementation
     - doc tweaklets

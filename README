@@ -1,4 +1,4 @@
-Goto-Cached version 0.02
+Goto-Cached version 0.03
 ========================
 
 Goto::Cached - an amortized O(1) drop-in replacement for Perl's O(n) goto

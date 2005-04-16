@@ -23,10 +23,12 @@ static char * GOTO_KEY = NULL;
 static size_t GOTO_KEYLEN = 256;
 static U32 GOTO_CACHED_SCOPE_DEPTH = 0;
 
+static OP *last_goto_src = NULL;
+static OP *last_goto_dst = NULL;
+
 OP* goto_cached(pTHX) {
 	dSP;
 	OP *op;
-	/* char *key = 0; */
 
 	if (PL_op->op_flags & OPf_STACKED) {
 		SV *sv, **svp;
@@ -35,11 +37,10 @@ OP* goto_cached(pTHX) {
 		/* Perl_warn(aTHX_ "\ndynamic goto\n"); */
 		sv = TOPs;
 
-		if (SvROK(sv) && SvTYPE(SvRV(sv)) == SVt_PVCV) { /* goto &sub */
+		/* if (SvROK(sv) && SvTYPE(SvRV(sv)) == SVt_PVCV) { */ /* goto &sub */
+		if (SvROK(sv) || (PL_op->op_flags & OPf_SPECIAL)) { /* goto &sub or dump() */
 			/* Perl_warn(aTHX_ "goto &sub\n"); */
-			return Perl_pp_goto(aTHX); /* this is faster than using the cache */
-			/* Newz(0, key, klen, char); */
-			/* snprintf(key, klen, "%0*lx%0*lx", PTRSIZE * 2, PTR2UV(PL_op), PTRSIZE * 2, PTR2UV(SvRV(sv))); */
+			return Perl_pp_goto(aTHX);
 		} else {
 			/* Perl_warn(aTHX_ "goto $label\n"); */
 			klen = UVSIZE * 2 + 1 + SvCUR(sv);
@@ -57,7 +58,6 @@ OP* goto_cached(pTHX) {
 
 		if (svp) {
 			/* Perl_warn(aTHX_ "found op\n"); */
-			/* op = (OP *)SvIVX(*svp); */
 			op = INT2PTR(OP *, SvIVX(*svp));
 		} else {
 			/* Perl_warn(aTHX_ "computing op\n"); */
@@ -69,8 +69,15 @@ OP* goto_cached(pTHX) {
 
 	} else { /* op has label hardwired - use ptable keyed on the op */
 		/* Perl_warn(aTHX_ "\nstatic goto\n"); */
+		if (PL_op == last_goto_src)
+			RETURNOP(last_goto_dst);
+
 		op = (OP *)PTABLE_fetch(GOTO_OP_CACHE, PL_op);
-		if (!op) {
+
+		if (op) {
+			last_goto_src = PL_op;
+			last_goto_dst = op;
+		} else {
 			/* Perl_warn(aTHX_ "computing op\n"); */
 			op = Perl_pp_goto(aTHX);
 			/* bypass the cache if the target is not in scope */

@@ -8,7 +8,7 @@ use warnings;
 use XSLoader;
 use Scope::Guard;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 XSLoader::load 'Goto::Cached', $VERSION;
 
@@ -55,7 +55,7 @@ cached.
 
 =head1 VERSION
 
-0.02
+0.03
 
 =head1 SEE ALSO
 
