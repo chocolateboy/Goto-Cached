@@ -8,19 +8,18 @@ use warnings;
 use XSLoader;
 use Scope::Guard;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 XSLoader::load 'Goto::Cached', $VERSION;
 
 sub import {
-	$^H |= 0x20000;
-
 	my $sg = Scope::Guard->new(sub { Goto::Cached::leavescope() });
 
-	Goto::Cached::enterscope();
-
+	$^H |= 0x220000; # 0x220000 rather than 0x020000 to work around %^H scoping bug
 	$^H{'Goto::Cached'} = 1;
 	$^H{$sg} = $sg;
+
+	Goto::Cached::enterscope();
 }
 
 END { Goto::Cached::cleanup() }
@@ -50,12 +49,12 @@ Goto::Cached - an amortized O(1) drop-in replacement for Perl's O(n) goto
 =head1 DESCRIPTION
 
 Goto::Cached provides a fast, lexically-scoped drop-in replacement for perl's
-builtin C<goto>. Its use is the same as the builtin. C<goto &sub> is not
-cached.
+builtin C<goto>. Its use is the same as the builtin. C<goto &sub> and jumps out
+of the current scope are not cached.
 
 =head1 VERSION
 
-0.03
+0.04
 
 =head1 SEE ALSO
 

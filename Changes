@@ -1,12 +1,18 @@
 Revision history for Perl extension Goto::Cached
 
-0.02  Sat Apr 16 13:43:00 2005
-    -  + L1 cache optimization
+0.04  Wed Apr 20 05:24:56 2005
+    - split into goto_cached_static and goto_cached_dynamic
+    - weed out op_dump at compile-time
+    - workaround for %^H scoping bug
+    - optimize goto LABEL by storing the target in op_next
+
+0.03  Sat Apr 16 13:43:00 2005
+    - MRU cache for goto LABEL
 
 0.02  Wed Apr 13 00:50:20 2005
     - compatibility/portability fixes + isolate ptr table from perl's implementation
     - doc tweaklets
-	- fix optimization in Makefile.PL
+    - fix optimization in Makefile.PL
 
 0.01  Tue Apr 12 02:03:49 2005
-	- original version; created by h2xs 1.23 with options -n Goto::Cached
+    - original version; created by h2xs 1.23 with options -n Goto::Cached
