@@ -1,5 +1,10 @@
 Revision history for Perl extension Goto::Cached
 
+0.05  Sat Apr 23 17:54:52 2005
+    - misc fixes
+    - speed up goto $label
+	- more tests
+
 0.04  Wed Apr 20 05:24:56 2005
     - split into goto_cached_static and goto_cached_dynamic
     - weed out op_dump at compile-time

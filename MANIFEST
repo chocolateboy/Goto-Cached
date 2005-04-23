@@ -6,7 +6,9 @@ Makefile.PL
 README
 lib/Goto/Cached.pm
 ppport.h
+t/01use.t
 t/dynamic.t
 t/pod.t
+t/scope.t
 t/static.t
-t/use.t
+t/sub.t
