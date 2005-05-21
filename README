@@ -1,7 +1,7 @@
-Goto-Cached version 0.05
+Goto-Cached version 0.06
 ========================
 
-Goto::Cached - an amortized O(1) drop-in replacement for Perl's O(n) goto
+Goto::Cached - a fast drop-in replacement for Perl's O(n) goto
 
 Goto::Cached provides a fast, lexically-scoped drop-in replacement for perl's
 builtin goto. Its use is the same as the builtin. goto &sub and jumps out of the

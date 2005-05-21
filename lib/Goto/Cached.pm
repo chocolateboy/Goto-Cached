@@ -8,7 +8,7 @@ use warnings;
 use XSLoader;
 use Scope::Guard;
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 XSLoader::load 'Goto::Cached', $VERSION;
 
@@ -22,15 +22,13 @@ sub import {
 	Goto::Cached::enterscope();
 }
 
-END { Goto::Cached::cleanup() }
-
 1;
 
 __END__
 
 =head1 NAME
 
-Goto::Cached - an amortized O(1) drop-in replacement for Perl's O(n) goto
+Goto::Cached - a fast drop-in replacement for Perl's O(n) goto
 
 =head1 SYNOPSIS
 
@@ -54,7 +52,7 @@ of the current scope are not cached.
 
 =head1 VERSION
 
-0.05
+0.06
 
 =head1 SEE ALSO
 

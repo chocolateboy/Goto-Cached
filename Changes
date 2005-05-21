@@ -1,5 +1,9 @@
 Revision history for Perl extension Goto::Cached
 
+0.06  Sat May 21 15:07:41 2005
+	- fix segfault
+	- move END handler to XS
+
 0.05  Sat Apr 23 17:54:52 2005
     - misc fixes
     - speed up goto $label

@@ -16,8 +16,6 @@ OP* goto_cached_static(pTHX) {
 	dSP;
 	OP *op;
 
-	/* Perl_warn(aTHX_ "\nstatic goto: 0x%x => %s", PL_op, cPVOP->op_pv); */
-
 	if (PL_op->op_private & GOTO_CACHED_CACHED) {
 		RETURNOP(PL_op->op_next);
 	} else {
@@ -40,13 +38,10 @@ OP* goto_cached_dynamic(pTHX) {
 	size_t len;
 	char *label = SvPV(sv, len);
 
-	/* Perl_warn(aTHX_ "\ndynamic goto: 0x%x => %s", PL_op, label); */
-
 	if (SvROK(sv)) {
 		if (SvTYPE(SvRV(sv)) == SVt_IV) {
 			RETURNOP((OP *)SvIVX(SvRV(sv)));
 		} else {
-			cPVOP->op_pv = Nullch;
 			PL_op->op_private &= ~GOTO_CACHED_CACHED;
 			PL_op->op_ppaddr = MEMBER_TO_FPTR(Perl_pp_goto);
 			return Perl_pp_goto(aTHX);
@@ -54,18 +49,17 @@ OP* goto_cached_dynamic(pTHX) {
 	} else if (PL_op->op_private & GOTO_CACHED_CACHED) {
 		SV **svp;
 
-		svp = hv_fetch((HV *)cPVOP->op_pv, label, len, 0);
+		svp = hv_fetch((HV *)PL_op->op_next, label, len, 0);
 
 		if (svp && *svp && SvOK(*svp)) {
 			RETURNOP(INT2PTR(OP *, SvIVX(*svp)));
 		} else {
 			op = Perl_pp_goto(aTHX);
 			if (PL_lastgotoprobe) { /* target is not in scope */
-				cPVOP->op_pv = Nullch;
 				PL_op->op_private &= ~GOTO_CACHED_CACHED;
 				PL_op->op_ppaddr = MEMBER_TO_FPTR(Perl_pp_goto);
 			} else {
-				hv_store((HV *)cPVOP->op_pv, label, len, newSVuv(PTR2UV(op)), 0);
+				hv_store((HV *)PL_op->op_next, label, len, newSVuv(PTR2UV(op)), 0);
 			}
 			return op;
 		}
@@ -76,7 +70,7 @@ OP* goto_cached_dynamic(pTHX) {
 		} else {
 			HV * hv;
 			hv = newHV();
-			cPVOP->op_pv = (char *)hv;
+			PL_op->op_next = (char *)hv;
 			HvSHAREKEYS_off(hv);
 			av_push(GOTO_CACHED_ALLOCATED_HASHES, (SV *)hv);
 			PL_op->op_private |= GOTO_CACHED_CACHED;
@@ -86,7 +80,6 @@ OP* goto_cached_dynamic(pTHX) {
 }
 
 OP *goto_cached_check(pTHX_ OP *o) {
-	/* Perl_warn(aTHX_ "inside goto_cached_check: 0x%x", PL_hints); */
 	if ((o->op_type == OP_GOTO) && ((PL_hints & 0x220000) == 0x220000) && ((o->op_flags & OPf_SPECIAL) ^ OPf_SPECIAL)) {
 		SV **svp = NULL;
 		HV *table = GvHV(PL_hintgv);		
@@ -115,7 +108,6 @@ enterscope()
 			++GOTO_CACHED_SCOPE_DEPTH;
 		} else {
 			GOTO_CACHED_SCOPE_DEPTH = 1;
-			/* Perl_warn(aTHX_ "inside Goto::Cached::enterscope"); */
 			PL_check[OP_GOTO] = MEMBER_TO_FPTR(goto_cached_check);
 		}
 
@@ -127,15 +119,13 @@ leavescope()
 			--GOTO_CACHED_SCOPE_DEPTH;
 		} else {
 			GOTO_CACHED_SCOPE_DEPTH = 0;
-			/* Perl_warn(aTHX_ "inside Goto::Cached::leavescope"); */
 			PL_check[OP_GOTO] = MEMBER_TO_FPTR(Perl_ck_null);
 		}
 
 void
-cleanup()
+END()
 	PROTOTYPE:
 	CODE: 
-		/* Perl_warn(aTHX_ "inside Goto::Cached::cleanup"); */
 		GOTO_CACHED_SCOPE_DEPTH = 0;
 		av_clear(GOTO_CACHED_ALLOCATED_HASHES);
 		av_undef(GOTO_CACHED_ALLOCATED_HASHES);
