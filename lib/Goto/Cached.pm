@@ -7,12 +7,17 @@ use warnings;
 
 use XSLoader;
 use Scope::Guard;
+use base qw(Exporter);
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 XSLoader::load 'Goto::Cached', $VERSION;
 
+our @EXPORT_OK = qw(addressof);
+
 sub import {
+	my $class = shift;
+	$class->SUPER::import(); # call Exporter::import
 	my $sg = Scope::Guard->new(sub { Goto::Cached::leavescope() });
 
 	$^H |= 0x220000; # 0x220000 rather than 0x020000 to work around %^H scoping bug
@@ -52,7 +57,7 @@ of the current scope are not cached.
 
 =head1 VERSION
 
-0.06
+0.07
 
 =head1 SEE ALSO
 
