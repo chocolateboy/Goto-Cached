@@ -1,4 +1,4 @@
-Goto-Cached version 0.07
+Goto-Cached version 0.08
 ========================
 
 Goto::Cached - a fast drop-in replacement for Perl's O(n) goto
@@ -24,9 +24,7 @@ This module requires these other modules and libraries:
 
 COPYRIGHT AND LICENCE
 
-Put the correct copyright and licence information here.
-
-Copyright (c) 2005 by chocolateboy <chocolate.boy@email.com>
+Copyright (c) 2005-2008 by chocolateboy <chocolate.boy@email.com>
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.6 or,

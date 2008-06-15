@@ -7,24 +7,20 @@ use warnings;
 
 use XSLoader;
 use Scope::Guard;
-use base qw(Exporter);
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 XSLoader::load 'Goto::Cached', $VERSION;
 
-our @EXPORT_OK = qw(addressof);
-
 sub import {
-	my $class = shift;
-	$class->SUPER::import(); # call Exporter::import
-	my $sg = Scope::Guard->new(sub { Goto::Cached::leavescope() });
+    my $class = shift;
+    my $guard = Scope::Guard->new(sub { _leave() });
 
-	$^H |= 0x220000; # 0x220000 rather than 0x020000 to work around %^H scoping bug
-	$^H{'Goto::Cached'} = 1;
-	$^H{$sg} = $sg;
+    $^H |= 0x220000; # 0x220000 rather than 0x020000 to work around %^H scoping bug
+    $^H{'Goto::Cached'} = 1;
+    $^H{$guard} = $guard;
 
-	Goto::Cached::enterscope();
+    _enter();
 }
 
 1;
@@ -57,19 +53,23 @@ of the current scope are not cached.
 
 =head1 VERSION
 
-0.07
+0.08
 
 =head1 SEE ALSO
 
-L<Acme::Goto::Line>
+=over
+
+=item * L<Acme::Goto::Line>
+
+=back
 
 =head1 AUTHOR
 
-chocolateboy: <chocolate.boy@email.com>
+chocolateboy <chocolate.boy@email.com>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2005, chocolateboy.
+Copyright (c) 2005-2008, chocolateboy.
 
 This module is free software. It may be used, redistributed
 and/or modified under the same terms as Perl itself.

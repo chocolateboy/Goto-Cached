@@ -1,5 +1,9 @@
 Revision history for Perl extension Goto::Cached
 
+0.08  Sun Jun 15 15:48:35 2008
+    - remove unused code
+    - fix for perl >= 5.11
+
 0.07  Fri Sep 2 14:05:39 2005
     - fix threaded Perl pessimization
     - optimize static goto

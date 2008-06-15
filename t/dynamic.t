@@ -1,21 +1,27 @@
-#!perl
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
 
 use Test::More tests => 6;
 use Goto::Cached;
 
 sub test {
-	my $label = shift;
+    my $label = shift;
 
-	goto $label;
+    goto $label;
 
-	LABEL1: is ($label, 'LABEL1');
-	return;
+    LABEL1:
+    is($label, 'LABEL1');
+    return;
 
-	LABEL2: is ($label, 'LABEL2');
-	return;
+    LABEL2:
+    is($label, 'LABEL2');
+    return;
 
-	LABEL3: is ($label, 'LABEL3');
-	return;
+    LABEL3:
+    is($label, 'LABEL3');
+    return;
 }
 
 test('LABEL1');

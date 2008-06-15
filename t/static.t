@@ -1,4 +1,4 @@
-#!perl
+#!/usr/bin/env perl
 
 use strict;
 use warnings;
@@ -7,17 +7,20 @@ use Test::More tests => 3;
 use Goto::Cached;
 
 sub test {
-	my $val = '';
+    my $val = '';
 
-	goto LABEL2;
+    goto LABEL2;
 
-	return $val;
+    return $val;
 
-	LABEL1: $val .= '1'; goto LABEL3;
+    LABEL1: $val .= '1';
+    goto LABEL3;
 
-	LABEL2: $val .= '2'; goto LABEL1;
+    LABEL2: $val .= '2';
+    goto LABEL1;
 
-	LABEL3: $val .= '3'; return $val;
+    LABEL3: $val .= '3';
+    return $val;
 }
 
 is(test(), '213');
