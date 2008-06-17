@@ -4,7 +4,7 @@
 /*
 ----------------------------------------------------------------------
 
-    ppport.h -- Perl/Pollution/Portability Version 3.13_03
+    ppport.h -- Perl/Pollution/Portability Version 3.14
 
     Automatically created by Devel::PPPort running under perl 5.008008.
 
@@ -21,7 +21,7 @@ SKIP
 
 =head1 NAME
 
-ppport.h - Perl/Pollution/Portability version 3.13_03
+ppport.h - Perl/Pollution/Portability version 3.14
 
 =head1 SYNOPSIS
 
@@ -372,7 +372,7 @@ use strict;
 # Disable broken TRIE-optimization
 BEGIN { eval '${^RE_TRIE_MAXBUF} = -1' if $] >= 5.009004 && $] <= 5.009005 }
 
-my $VERSION = 3.13_03;
+my $VERSION = 3.14;
 
 my %opt = (
   quiet     => 0,

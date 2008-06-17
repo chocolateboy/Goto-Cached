@@ -7,16 +7,18 @@ use warnings;
 
 use XSLoader;
 use Scope::Guard;
+use Devel::Hints::Lexical qw(lexicalize_hh);
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 XSLoader::load 'Goto::Cached', $VERSION;
 
 sub import {
     my $class = shift;
-    my $guard = Scope::Guard->new(sub { _leave() });
+    my $guard = Scope::Guard->new(\&_leave);
 
-    $^H |= 0x220000; # 0x220000 rather than 0x020000 to work around %^H scoping bug
+    lexicalize_hh;
+
     $^H{'Goto::Cached'} = 1;
     $^H{$guard} = $guard;
 
@@ -53,7 +55,7 @@ of the current scope are not cached.
 
 =head1 VERSION
 
-0.08
+0.09
 
 =head1 SEE ALSO
 

@@ -21,7 +21,7 @@ OP* goto_cached_static_cached(pTHX) {
 
 OP* goto_cached_static(pTHX) {
     OP * op;
-    op =  PL_ppaddr[OP_GOTO](aTHXR);
+    op = PL_ppaddr[OP_GOTO](aTHXR);
 
     if (PL_lastgotoprobe) { /* target is not in scope */
         PL_op->op_ppaddr = PL_ppaddr[OP_GOTO];
@@ -57,7 +57,7 @@ OP* goto_cached_dynamic(pTHX) {
                 PL_op->op_private &= ~GOTO_CACHED_CACHED;
                 PL_op->op_ppaddr = PL_ppaddr[OP_GOTO];
             } else {
-                hv_store((HV *)PL_op->op_next, label, len, newSVuv(PTR2UV(op)), 0);
+                (void)hv_store((HV *)PL_op->op_next, label, len, newSVuv(PTR2UV(op)), 0);
             }
             return op;
         }
@@ -80,13 +80,7 @@ OP* goto_cached_dynamic(pTHX) {
 }
 
 OP *goto_cached_check(pTHX_ OP *o) {
-   /*
-     * work around a %^H scoping bug by checking that PL_hints (which is properly scoped) & an unused
-     * PL_hints bit (0x200000) is true
-     *
-     * XXX this is fixed in #33311: http://www.nntp.perl.org/group/perl.perl5.porters/2008/02/msg134131.html
-     */
-    if ((o->op_type == OP_GOTO) && ((PL_hints & 0x220000) == 0x220000)) {
+    if ((o->op_type == OP_GOTO) && (PL_hints & 0x020000)) {
         SV ** svp;
         HV * table = GvHV(PL_hintgv);
 
@@ -144,6 +138,5 @@ void
 END()
     PROTOTYPE:
     CODE: 
-        GOTO_CACHED_SCOPE_DEPTH = 0;
         av_clear(GOTO_CACHED_ALLOCATED_HASHES);
         av_undef(GOTO_CACHED_ALLOCATED_HASHES);
