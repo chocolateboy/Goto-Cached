@@ -5,14 +5,14 @@
 #include "XSUB.h"
 #include "ppport.h"
 
-OP* goto_cached_static(pTHX);
-OP* goto_cached_dynamic(pTHX);
-OP *goto_cached_check(pTHX_ OP *o);
-OP* goto_cached_static_cached(pTHX);
+OP * goto_cached_static(pTHX);
+OP * goto_cached_dynamic(pTHX);
+OP * goto_cached_check(pTHX_ OP *o);
+OP * goto_cached_static_cached(pTHX);
 
-static OP * (*goto_cached_old_ck_goto)(pTHX_ OP * op) = NULL;
-static U32 GOTO_CACHED_SCOPE_DEPTH = 0;
-static AV *GOTO_CACHED_ALLOCATED_HASHES = NULL;
+static OP * (*old_ck_goto)(pTHX_ OP * op) = NULL;
+static U32 SCOPE_DEPTH = 0;
+static AV * GOTO_CACHED_ALLOCATED_HASHES = NULL;
 static U8 GOTO_CACHED_CACHED = 128;
 
 OP* goto_cached_static_cached(pTHX) {
@@ -91,7 +91,7 @@ OP *goto_cached_check(pTHX_ OP *o) {
         }
     }
 
-    return CALL_FPTR(goto_cached_old_ck_goto)(aTHX_ o);
+    return CALL_FPTR(old_ck_goto)(aTHX_ o);
 }
 
 MODULE = Goto::Cached                PACKAGE = Goto::Cached                
@@ -106,16 +106,16 @@ void
 _enter()
     PROTOTYPE:
     CODE: 
-    if (GOTO_CACHED_SCOPE_DEPTH > 0) {
-        ++GOTO_CACHED_SCOPE_DEPTH;
+    if (SCOPE_DEPTH > 0) {
+        ++SCOPE_DEPTH;
     } else {
-        GOTO_CACHED_SCOPE_DEPTH = 1;
+        SCOPE_DEPTH = 1;
         /*
          * capture the check routine in scope when Goto::Cached is used.
          * usually, this will be Perl_ck_null, though, in principle,
          * it could be a bespoke checker spliced in by another module.
          */
-        goto_cached_old_ck_goto = PL_check[OP_GOTO];
+        old_ck_goto = PL_check[OP_GOTO];
         PL_check[OP_GOTO] = goto_cached_check;
     }
 
@@ -123,15 +123,15 @@ void
 _leave()
     PROTOTYPE:
     CODE: 
-    if (GOTO_CACHED_SCOPE_DEPTH == 0) {
+    if (SCOPE_DEPTH == 0) {
         Perl_warn(aTHX_ "scope underflow");
     }
 
-    if (GOTO_CACHED_SCOPE_DEPTH > 1) {
-        --GOTO_CACHED_SCOPE_DEPTH;
+    if (SCOPE_DEPTH > 1) {
+        --SCOPE_DEPTH;
     } else {
-        GOTO_CACHED_SCOPE_DEPTH = 0;
-        PL_check[OP_GOTO] = goto_cached_old_ck_goto;
+        SCOPE_DEPTH = 0;
+        PL_check[OP_GOTO] = old_ck_goto;
     }
 
 void

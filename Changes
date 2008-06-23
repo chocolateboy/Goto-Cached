@@ -1,5 +1,8 @@
 Revision history for Perl extension Goto::Cached
 
+0.09  Mon Jun 23 22:16:30 BST 2008
+    - s/Devel::Hints::Lexical/Devel::Pragma/
+
 0.09  Tue Jun 17 21:49:46 2008
     - rm %^H scoping workaround: use Devel::Hints::Lexical
 

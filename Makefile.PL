@@ -17,9 +17,9 @@ WriteMakefile(
     NAME         => 'Goto::Cached',
     VERSION_FROM => 'lib/Goto/Cached.pm',
     PREREQ_PM    => {
-        'Devel::Hints::Lexical' => '0.03',
-        'Scope::Guard'          => '0.03',
-        'Test::More'            => '0',
+        'Devel::Pragma' => '0.11',
+        'Scope::Guard'  => '0.03',
+        'Test::More'    => '0',
     },
     AUTHOR   => 'chocolateboy <chocolate.boy@email.com>',
     LIBS     => [''],

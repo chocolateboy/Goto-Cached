@@ -1,4 +1,4 @@
-Goto-Cached version 0.09
+Goto-Cached version 0.10
 ========================
 
 Goto::Cached - a fast drop-in replacement for Perl's O(n) goto
@@ -20,7 +20,7 @@ DEPENDENCIES
 
 This module requires these other modules and libraries:
 
-  Devel::Hints::Lexical
+  Devel::Pragma
   Scope::Guard
   Test::More
 

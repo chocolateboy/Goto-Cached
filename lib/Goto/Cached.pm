@@ -7,20 +7,19 @@ use warnings;
 
 use XSLoader;
 use Scope::Guard;
-use Devel::Hints::Lexical qw(lexicalize_hh);
+use Devel::Pragma qw(my_hints);
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 XSLoader::load 'Goto::Cached', $VERSION;
 
 sub import {
     my $class = shift;
-    my $guard = Scope::Guard->new(\&_leave);
+    my $hints = my_hints;
 
-    lexicalize_hh;
+    return if ($hints->{'Goto::Cached'});
 
-    $^H{'Goto::Cached'} = 1;
-    $^H{$guard} = $guard;
+    $hints->{'Goto::Cached'} = Scope::Guard->new(\&_leave);
 
     _enter();
 }
@@ -55,7 +54,7 @@ of the current scope are not cached.
 
 =head1 VERSION
 
-0.09
+0.10
 
 =head1 SEE ALSO
 
