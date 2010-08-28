@@ -3,6 +3,10 @@
 # run the test suite with PERL_TEST_GOTO_CACHED_DISABLE_BENCHMARK set to disable this benchmark e.g.
 #
 #     PERL_TEST_GOTO_CACHED_DISABLE_BENCHMARK=1 make test
+#
+# to supply a number of iterations or a duration, use the "arisdottle" operator (man prove):
+#
+#     prove -b t/benchmark.t :: -10
 
 use strict;
 use warnings;
@@ -55,7 +59,7 @@ sub recursive_factorial($) {
 
 my $N = 15;
 my $N_FACTORIAL = 1_307_674_368_000;
-my $COUNT = -2;
+my $COUNT = shift || -2;
 
 for (qw(uncached_factorial cached_factorial loop_factorial recursive_factorial)) {
     my $got = __PACKAGE__->can($_)->($N);

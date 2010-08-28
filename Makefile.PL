@@ -25,6 +25,13 @@ our %XS_PREREQUISITES = (
 
 our %XS_DEPENDENCIES = ExtUtils::Depends->new('Goto-Cached', keys(%XS_PREREQUISITES))->get_makefile_vars();
 
+# version.pm is core from 5.9 and is a common dependency
+# ExtUtils::MakeMaker::VERSION can contain an underscore (the stock version on Ubuntu 10.04 is 6.55_02)
+# which makes >= complain; use version.pm to avoid this where available
+our $MAKE_MAKER_VERSION = eval "use version; 1" ?
+    version->parse($ExtUtils::MakeMaker::VERSION) :
+    $ExtUtils::MakeMaker::VERSION;
+
 WriteMakefile(
     NAME          => 'Goto::Cached',
     VERSION_FROM  => 'lib/Goto/Cached.pm',
@@ -39,7 +46,7 @@ WriteMakefile(
     DEFINE        => '',
     INC           => '-I.',
     OPTIMIZE      => $OPTIMIZE,
-    ($ExtUtils::MakeMaker::VERSION >= 6.46 ?
+    ($MAKE_MAKER_VERSION >= 6.46 ?
         (META_MERGE => {
             configure_requires => {
                 'ExtUtils::Depends' => '0.302',
@@ -51,6 +58,6 @@ WriteMakefile(
         })
         : ()
     ),
-    ($ExtUtils::MakeMaker::VERSION >= 6.31 ? (LICENSE => 'perl') : ()),
+    ($MAKE_MAKER_VERSION >= 6.31 ? (LICENSE => 'perl') : ()),
     %XS_DEPENDENCIES,
 );

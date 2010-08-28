@@ -50,6 +50,7 @@ STATIC void goto_cached_data_destructor(pTHX_ void *data) {
     hv_undef(hv);
 }
 
+/* XXX calling the next OP's op_ppaddr directly is no faster in my tests */
 STATIC OP* goto_cached_static_fast(pTHX) {
     return (PL_op->op_next);
 }
