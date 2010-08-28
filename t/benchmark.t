@@ -2,7 +2,7 @@
 
 # by default, this benchmark only runs for CPAN Testers reports. To force it in other environments
 # (if App::Benchmark is installed), supply a count/duration argument after the "arisdottle"
-# operator (man prove):
+# separator (man prove):
 #
 #     prove -b t/benchmark.t :: -10     # run each benchmark for for 10 seconds
 #     prove -b t/benchmark.t :: 1000000 # run each benchmark 1,000,000 times
@@ -70,7 +70,7 @@ for (qw(uncached_factorial cached_factorial loop_factorial recursive_factorial))
 }
 
 if (not($ENV{PERL_CR_SMOKER_CURRENT}) && not(@ARGV)) {
-    plan skip_all => 'not a CPAN Testers Report';
+    plan skip_all => 'not a CPAN Testers report';
 } elsif (not(eval 'use App::Benchmark 1.102310; 1')) {
     plan skip_all => 'App::Benchmark >= 1.102310 is not installed';
 } else {
