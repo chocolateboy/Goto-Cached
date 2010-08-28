@@ -1,30 +1,56 @@
-use 5.006;
+use 5.008001; # Devel::Pragma requires this
+
+use strict;
+use warnings;
 
 use ExtUtils::MakeMaker;
+use ExtUtils::Depends;
 use Config;
-
-my $optimize;
+  
+our $OPTIMIZE;
 
 if ($Config{gccversion}) {
-    $optimize = '-O3 -Wall';
+    $OPTIMIZE = '-O3 -Wall -W';
+    $OPTIMIZE .= ' -g -Wextra -Wdeclaration-after-statement' if (-d 'dev');
 } elsif ($Config{osname} eq 'MSWin32') {
-    $optimize = '-O2 -W4';
+    $OPTIMIZE = '-O2 -W4';
 } else {
-    $optimize = $Config{optimize};
+    $OPTIMIZE = $Config{optimize};
 }
 
+our %XS_PREREQUISITES = (
+    'B::Hooks::OP::Check'      => '0.18',
+    'B::Hooks::OP::Annotation' => '0.43',
+);
+
+our %XS_DEPENDENCIES = ExtUtils::Depends->new('Goto-Cached', keys(%XS_PREREQUISITES))->get_makefile_vars();
+
 WriteMakefile(
-    NAME         => 'Goto::Cached',
-    VERSION_FROM => 'lib/Goto/Cached.pm',
-    PREREQ_PM    => {
-        'Devel::Pragma' => '0.11',
-        'Scope::Guard'  => '0.03',
-        'Test::More'    => '0',
-    },
-    AUTHOR   => 'chocolateboy <chocolate.boy@email.com>',
-    LIBS     => [''],
-    DEFINE   => '',
-    OPTIMIZE => $optimize,
-    INC      => '-I.',
+    NAME          => 'Goto::Cached',
+    VERSION_FROM  => 'lib/Goto/Cached.pm',
+    PREREQ_PM => {
+        %XS_PREREQUISITES,
+        'Devel::Pragma'        => '0.54',
+        'B::Hooks::EndOfScope' => '0.09',
+      },
+    ABSTRACT_FROM => 'lib/Goto/Cached.pm',
+    AUTHOR        => 'chocolateboy <chocolate@cpan.org>',
+    LIBS          => [''],
+    DEFINE        => '',
+    INC           => '-I.',
+    OPTIMIZE      => $OPTIMIZE,
+    ($ExtUtils::MakeMaker::VERSION >= 6.46 ?
+        (META_MERGE => {
+            configure_requires => {
+                'ExtUtils::Depends' => '0.302',
+                %XS_PREREQUISITES
+            },
+            resources => {
+                repository => 'http://github.com/chocolateboy/Goto-Cached',
+            },
+        })
+        : ()
+    ),
     ($ExtUtils::MakeMaker::VERSION >= 6.31 ? (LICENSE => 'perl') : ()),
+    %XS_DEPENDENCIES,
 );

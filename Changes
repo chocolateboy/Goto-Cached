@@ -1,6 +1,11 @@
 Revision history for Perl extension Goto::Cached
 
-0.09  Mon Jun 23 22:16:30 BST 2008
+0.20  Sat Aug 28 17:17:33 2010
+    - remove various archaisms
+    - add leak.t
+    - add (optional) benchmark.t
+
+0.10  Mon Jun 23 22:16:30 2008
     - s/Devel::Hints::Lexical/Devel::Pragma/
 
 0.09  Tue Jun 17 21:49:46 2008

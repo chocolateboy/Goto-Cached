@@ -4,7 +4,6 @@ use strict;
 use warnings;
 
 use Test::More tests => 4;
-use Data::Dumper;
 use Goto::Cached;
 
 sub test1 {
@@ -26,7 +25,7 @@ sub test4 {
 my ($caller1, $caller2) = (test1(), test2());
 my ($caller3, $caller4) = (test3(\&test4), test4());
 
-is(Dumper($caller1),       Dumper($caller2));
-is(Dumper($caller3),       Dumper($caller4));
-is(Dumper(test1()),        Dumper(test2()));
-is(Dumper(test3(\&test4)), Dumper(test4()));
+is_deeply($caller1, $caller2);
+is_deeply($caller3, $caller4);
+is_deeply(test1(), test2());
+is_deeply(test3(\&test4), test4());

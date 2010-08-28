@@ -1,97 +1,141 @@
-#define PERL_CORE
-
 #include "EXTERN.h"
 #include "perl.h"
+
+/*
+ * chocolateboy 2009-02-08
+ *
+ * for binary compatibility (see perlapi.h), XS modules perform a function call to
+ * access each and every interpreter variable. So, for instance, an innocuous-looking
+ * reference to PL_op becomes:
+ *
+ *     (*Perl_Iop_ptr(my_perl))
+ *
+ * This (obviously) impacts performance. Internally, PL_op is accessed as:
+ *
+ *     my_perl->Iop
+ *
+ * (in threaded/multiplicity builds (see intrpvar.h)), which is significantly faster.
+ *
+ * defining PERL_CORE gets us the fast version, at the expense of a future maintenance release
+ * possibly breaking things: http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2008-04/msg00171.html
+ *
+ * Rather than globally defining PERL_CORE, which pokes its fingers into various headers, exposing
+ * internals we'd rather not see, just define it for XSUB.h, which includes
+ * perlapi.h, which imposes the speed limit.
+ */
+
+#define PERL_CORE
 #include "XSUB.h"
+#undef PERL_CORE
+
 #include "ppport.h"
 
-OP * goto_cached_static(pTHX);
-OP * goto_cached_dynamic(pTHX);
-OP * goto_cached_check(pTHX_ OP *o);
-OP * goto_cached_static_cached(pTHX);
+#include "hook_op_check.h"
+#include "hook_op_annotation.h"
 
-static OP * (*old_ck_goto)(pTHX_ OP * op) = NULL;
-static U32 SCOPE_DEPTH = 0;
-static AV * GOTO_CACHED_ALLOCATED_HASHES = NULL;
-static U8 GOTO_CACHED_CACHED = 128;
+#define GOTO_CACHED_KEY "Goto::Cached"
 
-OP* goto_cached_static_cached(pTHX) {
+STATIC hook_op_check_id GOTO_CACHED_CHECK_ID = 0;
+STATIC OPAnnotationGroup GOTO_CACHED_ANNOTATIONS = NULL;
+STATIC OP * goto_cached_check(pTHX_ OP *o, void *user_data);
+STATIC OP * goto_cached_dynamic(pTHX);
+STATIC OP * goto_cached_static_fast(pTHX);
+STATIC OP * goto_cached_static(pTHX);
+STATIC U32 GOTO_CACHED_CHECK_ENABLED = 0;
+STATIC void goto_cached_data_destructor(pTHX_ void *data);
+
+STATIC void goto_cached_data_destructor(pTHX_ void *data) {
+    HV *hv = (HV *)data;
+    hv_clear(hv);
+    hv_undef(hv);
+}
+
+STATIC OP* goto_cached_static_fast(pTHX) {
     return (PL_op->op_next);
 }
 
-OP* goto_cached_static(pTHX) {
-    OP * op;
-    op = PL_ppaddr[OP_GOTO](aTHXR);
+STATIC OP* goto_cached_static(pTHX) {
+    OP * nextop;
+    OPAnnotation * annotation = op_annotation_get(GOTO_CACHED_ANNOTATIONS, PL_op);
+    nextop = (annotation->op_ppaddr)(aTHX);
 
-    if (PL_lastgotoprobe) { /* target is not in scope */
-        PL_op->op_ppaddr = PL_ppaddr[OP_GOTO];
+    if (PL_lastgotoprobe) { /* target is not in scope: disable caching */
+        PL_op->op_ppaddr = annotation->op_ppaddr;
     } else {
-        PL_op->op_next = op;
-        PL_op->op_ppaddr = goto_cached_static_cached;
+        PL_op->op_next = nextop;
+        PL_op->op_ppaddr = goto_cached_static_fast;
     }
 
-    return op;
+    op_annotation_delete(aTHX_ GOTO_CACHED_ANNOTATIONS, PL_op); /* not needed anymore */
+
+    return nextop;
 }
 
-OP* goto_cached_dynamic(pTHX) {
+STATIC OP* goto_cached_dynamic(pTHX) {
     dSP;
     SV * sv = TOPs;
-    OP * op = NULL;
-    STRLEN len;
-    char * label = SvPV(sv, len);
+    OP * nextop = NULL;
+    OPAnnotation * annotation = op_annotation_get(GOTO_CACHED_ANNOTATIONS, PL_op);
 
-    if (SvROK(sv)) {
-        PL_op->op_private &= ~GOTO_CACHED_CACHED;
-        PL_op->op_ppaddr = PL_ppaddr[OP_GOTO];
-        return PL_ppaddr[OP_GOTO](aTHXR);
-    } else if (PL_op->op_private & GOTO_CACHED_CACHED) {
+    if (SvROK(sv)) { /* goto SUB: disable caching */
+        PL_op->op_ppaddr = annotation->op_ppaddr;
+        nextop = (PL_op->op_ppaddr)(aTHX);
+        op_annotation_delete(aTHX_ GOTO_CACHED_ANNOTATIONS, PL_op); /* not needed anymore */
+    } else if (annotation->data) { /* there is a cache for this op */
         SV ** svp;
+        HV *hv = (HV *)(annotation->data);
+        STRLEN len;
+        const char * label = SvPV_const(sv, len);
 
-        svp = hv_fetch((HV *)PL_op->op_next, label, len, 0);
+        svp = hv_fetch(hv, label, len, 0);
 
         if (svp && *svp && SvOK(*svp)) {
-            RETURNOP(INT2PTR(OP *, SvIVX(*svp)));
+            nextop = INT2PTR(OP *, SvIVX(*svp));
         } else {
-            op = PL_ppaddr[OP_GOTO](aTHXR);
-            if (PL_lastgotoprobe) { /* target is not in scope */
-                PL_op->op_private &= ~GOTO_CACHED_CACHED;
-                PL_op->op_ppaddr = PL_ppaddr[OP_GOTO];
+            nextop = (annotation->op_ppaddr)(aTHX);
+
+            if (PL_lastgotoprobe) { /* target is not in scope: disable caching */
+                PL_op->op_ppaddr = annotation->op_ppaddr;
+                op_annotation_delete(aTHX_ GOTO_CACHED_ANNOTATIONS, PL_op); /* not needed anymore */
             } else {
-                (void)hv_store((HV *)PL_op->op_next, label, len, newSVuv(PTR2UV(op)), 0);
+                (void)hv_store(hv, label, len, newSVuv(PTR2UV(nextop)), 0);
             }
-            return op;
         }
     } else {
-        op = PL_ppaddr[OP_GOTO](aTHXR);
-        if (PL_lastgotoprobe) { /* target is not in scope */
-            PL_op->op_ppaddr = PL_ppaddr[OP_GOTO];
+        nextop = (annotation->op_ppaddr)(aTHX);
+
+        if (PL_lastgotoprobe) { /* target is not in scope: disable caching */
+            PL_op->op_ppaddr = annotation->op_ppaddr;
+            op_annotation_delete(aTHX_ GOTO_CACHED_ANNOTATIONS, PL_op); /* not needed anymore */
         } else {
-            HV * hv;
-
-            hv = newHV();
-            PL_op->op_next = (OP *)hv;
-            HvSHAREKEYS_off(hv);
-            av_push(GOTO_CACHED_ALLOCATED_HASHES, (SV *)hv);
-            PL_op->op_private |= GOTO_CACHED_CACHED;
+            STRLEN len;
+            char * label = SvPV(sv, len);
+            HV * hv = newHV();
+            (void)hv_store(hv, label, len, newSVuv(PTR2UV(nextop)), 0);
+            annotation->data = hv;
+            annotation->dtor = goto_cached_data_destructor;
         }
-
-        return op;
     }
+
+    return nextop;
 }
 
-OP *goto_cached_check(pTHX_ OP *o) {
+STATIC OP *goto_cached_check(pTHX_ OP *o, void *user_data) {
+    PERL_UNUSED_ARG(user_data);
+
     if ((o->op_type == OP_GOTO) && (PL_hints & 0x020000)) {
         SV ** svp;
-        HV * table = GvHV(PL_hintgv);
+        HV * table = GvHVn(PL_hintgv);
 
-        if (table && (svp = hv_fetch(table, "Goto::Cached", 12, FALSE)) && *svp && SvOK(*svp)) {
+        if (table && (svp = hv_fetch(table, GOTO_CACHED_KEY, 12, FALSE)) && *svp && SvOK(*svp)) {
+            op_annotate(GOTO_CACHED_ANNOTATIONS, o, NULL, NULL);
             o->op_ppaddr = (o->op_flags & OPf_STACKED) ?
                 goto_cached_dynamic :
                 goto_cached_static;
         }
     }
 
-    return CALL_FPTR(old_ck_goto)(aTHX_ o);
+    return o;
 }
 
 MODULE = Goto::Cached                PACKAGE = Goto::Cached                
@@ -99,44 +143,30 @@ MODULE = Goto::Cached                PACKAGE = Goto::Cached
 PROTOTYPES: ENABLE
 
 BOOT:
-GOTO_CACHED_ALLOCATED_HASHES = newAV();
-if (!GOTO_CACHED_ALLOCATED_HASHES) Perl_croak(aTHX_ "Can't create label hashes array");
+    GOTO_CACHED_ANNOTATIONS = op_annotation_group_new();
+
+void
+END()
+    PROTOTYPE:
+    CODE:
+        if (GOTO_CACHED_ANNOTATIONS) { /* make sure it was initialised */
+            op_annotation_group_free(aTHX_ GOTO_CACHED_ANNOTATIONS);
+        }
 
 void
 _enter()
     PROTOTYPE:
     CODE: 
-    if (SCOPE_DEPTH > 0) {
-        ++SCOPE_DEPTH;
-    } else {
-        SCOPE_DEPTH = 1;
-        /*
-         * capture the check routine in scope when Goto::Cached is used.
-         * usually, this will be Perl_ck_null, though, in principle,
-         * it could be a bespoke checker spliced in by another module.
-         */
-        old_ck_goto = PL_check[OP_GOTO];
-        PL_check[OP_GOTO] = goto_cached_check;
-    }
+        if (GOTO_CACHED_CHECK_ENABLED == 0) {
+            GOTO_CACHED_CHECK_ID = hook_op_check(OP_GOTO, goto_cached_check, NULL);
+        }
+        ++GOTO_CACHED_CHECK_ENABLED;
 
 void
 _leave()
     PROTOTYPE:
     CODE: 
-    if (SCOPE_DEPTH == 0) {
-        Perl_warn(aTHX_ "scope underflow");
-    }
-
-    if (SCOPE_DEPTH > 1) {
-        --SCOPE_DEPTH;
-    } else {
-        SCOPE_DEPTH = 0;
-        PL_check[OP_GOTO] = old_ck_goto;
-    }
-
-void
-END()
-    PROTOTYPE:
-    CODE: 
-        av_clear(GOTO_CACHED_ALLOCATED_HASHES);
-        av_undef(GOTO_CACHED_ALLOCATED_HASHES);
+        --GOTO_CACHED_CHECK_ENABLED;
+        if (GOTO_CACHED_CHECK_ENABLED == 0) {
+            hook_op_check_remove(OP_GOTO, GOTO_CACHED_CHECK_ID);
+        }
