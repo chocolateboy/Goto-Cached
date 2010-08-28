@@ -7,9 +7,6 @@ Goto::Cached provides a fast, lexically-scoped drop-in replacement for Perl's
 builtin goto. Its use is the same as the builtin. goto &sub and jumps out
 of the current scope are not cached.
 
-In a simple benchmark (see t/benchmark.t), static gotos are approximately 6 times
-faster than the builtin, and dynamic gotos are approximately 1.6 times faster.
-
 INSTALLATION
 
 To install this module type the following:
