@@ -1,5 +1,10 @@
 Revision history for Perl extension Goto::Cached
 
+0.22  Sat Aug 28 22:45:17 2010
+    - bump minimum perl version to 5.8.8
+    - only run benchmark for CPAN Testers reports
+    - fix bareword in t/benchmark.t
+
 0.21  Sat Aug 28 19:20:06 2010
     - improve synopsis
     - use a more realistic benchmark

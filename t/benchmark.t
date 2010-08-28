@@ -70,16 +70,16 @@ for (qw(uncached_factorial cached_factorial loop_factorial recursive_factorial))
     }
 }
 
-if ($ENV{'PERL_TEST_GOTO_CACHED_DISABLE_BENCHMARK'}) {
-    plan skip_all => 'benchmark disabled';
-} elsif (eval "use App::Benchmark; 1") {
+if (not($ENV{PERL_CR_SMOKER_CURRENT})) {
+    plan skip_all => 'not a CPAN Testers Report';
+} elsif (not(eval 'use App::Benchmark 1.102310; 1')) {
+    plan skip_all => 'App::Benchmark >= 1.102310 is not installed';
+} else {
     benchmark_diag($COUNT, {
         uncached_factorial  => sub { uncached_factorial($N) },
         cached_factorial    => sub { cached_factorial($N) },
         loop_factorial      => sub { loop_factorial($N) },
         recursive_factorial => sub { recursive_factorial($N) },
     });
-    done_testing;
-} else {
-    plan skip_all => 'App::Benchmark is not installed';
+    done_testing();
 }

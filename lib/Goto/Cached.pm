@@ -1,16 +1,17 @@
 package Goto::Cached;
 
-use 5.008001;
+use 5.008008;
 
 use strict;
 use warnings;
 
+use B::Hooks::OP::Annotation;
 use B::Hooks::OP::Check;
 use B::Hooks::EndOfScope qw(on_scope_end);
 use Devel::Pragma qw(my_hints);
 use XSLoader;
 
-our $VERSION = '0.21';
+our $VERSION = '0.22';
 
 XSLoader::load 'Goto::Cached', $VERSION;
 
@@ -19,7 +20,7 @@ sub import {
 
     unless ($hints->{'Goto::Cached'}) {
         $hints->{'Goto::Cached'} = 1;
-        on_scope_end { _leave() };
+        on_scope_end \&_leave;
         _enter();
     }
 }
@@ -55,7 +56,7 @@ of the current scope are not cached.
 
 =head1 VERSION
 
-0.21
+0.22
 
 =head1 SEE ALSO
 
