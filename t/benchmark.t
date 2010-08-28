@@ -1,12 +1,11 @@
 #!/usr/bin/env perl
 
-# run the test suite with PERL_TEST_GOTO_CACHED_DISABLE_BENCHMARK set to disable this benchmark e.g.
+# by default, this benchmark only runs for CPAN Testers reports. To force it in other environments
+# (if App::Benchmark is installed), supply a count/duration argument after the "arisdottle"
+# operator (man prove):
 #
-#     PERL_TEST_GOTO_CACHED_DISABLE_BENCHMARK=1 make test
-#
-# to supply a number of iterations or a duration, use the "arisdottle" operator (man prove):
-#
-#     prove -b t/benchmark.t :: -10
+#     prove -b t/benchmark.t :: -10     # run each benchmark for for 10 seconds
+#     prove -b t/benchmark.t :: 1000000 # run each benchmark 1,000,000 times
 
 use strict;
 use warnings;
@@ -59,7 +58,7 @@ sub recursive_factorial($) {
 
 my $N = 15;
 my $N_FACTORIAL = 1_307_674_368_000;
-my $COUNT = shift || -2;
+my $COUNT = $_[0] || -5;
 
 for (qw(uncached_factorial cached_factorial loop_factorial recursive_factorial)) {
     my $got = __PACKAGE__->can($_)->($N);
@@ -70,7 +69,7 @@ for (qw(uncached_factorial cached_factorial loop_factorial recursive_factorial))
     }
 }
 
-if (not($ENV{PERL_CR_SMOKER_CURRENT})) {
+if (not($ENV{PERL_CR_SMOKER_CURRENT}) && not(@ARGV)) {
     plan skip_all => 'not a CPAN Testers Report';
 } elsif (not(eval 'use App::Benchmark 1.102310; 1')) {
     plan skip_all => 'App::Benchmark >= 1.102310 is not installed';
