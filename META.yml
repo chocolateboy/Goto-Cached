@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Goto-Cached
-version:            0.20
+version:            0.21
 abstract:           a fast drop-in replacement for Perl's O(n) goto
 author:
     - chocolateboy <chocolate@cpan.org>

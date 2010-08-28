@@ -101,7 +101,7 @@ STATIC OP* goto_cached_dynamic(pTHX) {
                 (void)hv_store(hv, label, len, newSVuv(PTR2UV(nextop)), 0);
             }
         }
-    } else {
+    } else { /* initialize cache */
         nextop = (annotation->op_ppaddr)(aTHX);
 
         if (PL_lastgotoprobe) { /* target is not in scope: disable caching */

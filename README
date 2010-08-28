@@ -1,4 +1,4 @@
-Goto-Cached version 0.20
+Goto-Cached version 0.21
 ========================
 
 Goto::Cached - a fast drop-in replacement for Perl's O(n) goto

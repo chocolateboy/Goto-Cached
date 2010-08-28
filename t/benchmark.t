@@ -9,146 +9,71 @@ use warnings;
 
 use Test::More;
 
-sub static_cached {
+sub cached_factorial($) {
     use Goto::Cached;
-    my $i = 0;
-    goto LABEL9;
+    my $n = shift;
+    my $accum = 1;
 
-    ++$i;
-    ++$i;
-    ++$i;
-    ++$i;
-    ++$i;
-    ++$i;
-    ++$i;
-    ++$i;
-    ++$i;
-    ++$i;
-
-    LABEL0: return;
-    LABEL1: goto LABEL0;
-    LABEL2: goto LABEL1;
-    LABEL3: goto LABEL2;
-    LABEL4: goto LABEL3;
-    LABEL5: goto LABEL4;
-    LABEL6: goto LABEL5;
-    LABEL7: goto LABEL6;
-    LABEL8: goto LABEL7;
-    LABEL9: goto LABEL8;
+    iter: return $accum if ($n < 2);
+    $accum *= $n;
+    --$n;
+    goto iter;
 }
 
-sub static_uncached {
-    my $i = 0;
-    goto LABEL9;
+sub uncached_factorial($) {
+    my $n = shift;
+    my $accum = 1;
 
-    ++$i;
-    ++$i;
-    ++$i;
-    ++$i;
-    ++$i;
-    ++$i;
-    ++$i;
-    ++$i;
-    ++$i;
-    ++$i;
-
-    LABEL0: return;
-    LABEL1: goto LABEL0;
-    LABEL2: goto LABEL1;
-    LABEL3: goto LABEL2;
-    LABEL4: goto LABEL3;
-    LABEL5: goto LABEL4;
-    LABEL6: goto LABEL5;
-    LABEL7: goto LABEL6;
-    LABEL8: goto LABEL7;
-    LABEL9: goto LABEL8;
+    iter: return $accum if ($n < 2);
+    $accum *= $n;
+    --$n;
+    goto iter;
 }
 
-sub dynamic_cached {
-    use Goto::Cached;
-    my $i = 0;
-    my $label0 = 'LABEL0';
-    my $label1 = 'LABEL1';
-    my $label2 = 'LABEL2';
-    my $label3 = 'LABEL3';
-    my $label4 = 'LABEL4';
-    my $label5 = 'LABEL5';
-    my $label6 = 'LABEL6';
-    my $label7 = 'LABEL7';
-    my $label8 = 'LABEL8';
-    my $label9 = 'LABEL9';
+sub loop_factorial($) {
+    my $accum = 1;
+    my $n = shift;
 
-    goto $label9;
+    while ($n > 1) {
+        $accum *= $n;
+        --$n;
+    }
 
-    ++$i;
-    ++$i;
-    ++$i;
-    ++$i;
-    ++$i;
-    ++$i;
-    ++$i;
-    ++$i;
-    ++$i;
-    ++$i;
-
-    LABEL0: return;
-    LABEL1: goto $label0;
-    LABEL2: goto $label1;
-    LABEL3: goto $label2;
-    LABEL4: goto $label3;
-    LABEL5: goto $label4;
-    LABEL6: goto $label5;
-    LABEL7: goto $label6;
-    LABEL8: goto $label7;
-    LABEL9: goto $label8;
+    return $accum;
 }
 
-sub dynamic_uncached {
-    my $i = 0;
-    my $label0 = 'LABEL0';
-    my $label1 = 'LABEL1';
-    my $label2 = 'LABEL2';
-    my $label3 = 'LABEL3';
-    my $label4 = 'LABEL4';
-    my $label5 = 'LABEL5';
-    my $label6 = 'LABEL6';
-    my $label7 = 'LABEL7';
-    my $label8 = 'LABEL8';
-    my $label9 = 'LABEL9';
+sub recursive_factorial($);
+sub recursive_factorial($) {
+    my $n = shift;
 
-    goto $label9;
+    if ($n < 2) {
+        return 1;
+    } else {
+        return $n * recursive_factorial($n - 1);
+    }
+}
 
-    ++$i;
-    ++$i;
-    ++$i;
-    ++$i;
-    ++$i;
-    ++$i;
-    ++$i;
-    ++$i;
-    ++$i;
-    ++$i;
+my $N = 15;
+my $N_FACTORIAL = 1_307_674_368_000;
+my $COUNT = -2;
 
-    LABEL0: return;
-    LABEL1: goto $label0;
-    LABEL2: goto $label1;
-    LABEL3: goto $label2;
-    LABEL4: goto $label3;
-    LABEL5: goto $label4;
-    LABEL6: goto $label5;
-    LABEL7: goto $label6;
-    LABEL8: goto $label7;
-    LABEL9: goto $label8;
+for (qw(uncached_factorial cached_factorial loop_factorial recursive_factorial)) {
+    my $got = __PACKAGE__->can($_)->($N);
+    my $want = $N_FACTORIAL;
+
+    unless ($got == $want) {
+        plan skip_all => "invalid result for $_: expected $want, got $got";
+    }
 }
 
 if ($ENV{'PERL_TEST_GOTO_CACHED_DISABLE_BENCHMARK'}) {
     plan skip_all => 'benchmark disabled';
 } elsif (eval "use App::Benchmark; 1") {
-    benchmark_diag(-2, {
-        dynamic_cached   => \&dynamic_cached,
-        dynamic_uncached => \&dynamic_uncached,
-        static_cached    => \&static_cached,
-        static_uncached  => \&static_uncached,
+    benchmark_diag($COUNT, {
+        uncached_factorial  => sub { uncached_factorial($N) },
+        cached_factorial    => sub { cached_factorial($N) },
+        loop_factorial      => sub { loop_factorial($N) },
+        recursive_factorial => sub { recursive_factorial($N) },
     });
     done_testing;
 } else {

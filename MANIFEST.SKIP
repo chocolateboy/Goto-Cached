@@ -32,3 +32,4 @@
 \bcover_db\b
 
 ^dev/
+^.dev$
