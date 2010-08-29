@@ -40,19 +40,19 @@ Goto::Cached - a fast drop-in replacement for Perl's O(n) goto
     sub factorial($) {
         use Goto::Cached;
         my $n = shift;
-        my $accum = 1;
+        my $accumulator = 1;
 
-        iter: return $accum if ($n < 2);
-        $accum *= $n;
+        iter: return $accumulator if ($n < 2);
+        $accumulator *= $n;
         --$n;
         goto iter;
     }
 
 =head1 DESCRIPTION
 
-Goto::Cached provides a fast, lexically-scoped drop-in replacement for Perl's
+C<Goto::Cached> provides a fast, lexically-scoped drop-in replacement for Perl's
 builtin C<goto>. Its use is the same as the builtin. C<goto &sub> and jumps out
-of the current scope are not cached.
+of the current scope (including C<if> and C<unless> blocks) are not cached.
 
 =head1 VERSION
 

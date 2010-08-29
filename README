@@ -4,8 +4,8 @@ Goto-Cached version 0.22
 Goto::Cached - a fast drop-in replacement for Perl's O(n) goto
 
 Goto::Cached provides a fast, lexically-scoped drop-in replacement for Perl's
-builtin goto. Its use is the same as the builtin. goto &sub and jumps out
-of the current scope are not cached.
+builtin "goto". Its use is the same as the builtin. "goto &sub" and jumps out
+of the current scope (including "if" and "unless" blocks) are not cached.
 
 INSTALLATION
 
