@@ -6,7 +6,7 @@ use warnings;
 use ExtUtils::MakeMaker;
 use ExtUtils::Depends;
 use Config;
-  
+
 our $OPTIMIZE;
 
 if ($Config{gccversion}) {
