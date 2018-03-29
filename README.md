@@ -3,6 +3,19 @@
 [![CPAN Version](https://badge.fury.io/pl/autobox.svg)](http://badge.fury.io/pl/autobox)
 [![License](https://img.shields.io/badge/license-artistic-blue.svg)](https://github.com/chocolateboy/autobox/blob/master/LICENSE.md)
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+- [NAME](#name)
+- [SYNOPSIS](#synopsis)
+- [DESCRIPTION](#description)
+- [VERSION](#version)
+- [SEE ALSO](#see-also)
+- [AUTHOR](#author)
+- [COPYRIGHT](#copyright)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # NAME
 
 Goto::Cached - a fast drop-in replacement for Perl's O(n) goto
