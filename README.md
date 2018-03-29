@@ -12,7 +12,7 @@
 - [VERSION](#version)
 - [SEE ALSO](#see-also)
 - [AUTHOR](#author)
-- [COPYRIGHT](#copyright)
+- [COPYRIGHT AND LICENSE](#copyright-and-license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -53,7 +53,7 @@ of the current scope (including `if` and `unless` blocks) are not cached.
 
 [chocolateboy](mailto:chocolate@cpan.org)
 
-# COPYRIGHT
+# COPYRIGHT AND LICENSE
 
 Copyright © 2005-2010 by chocolateboy.
 
