@@ -50,7 +50,7 @@ Goto::Cached - a fast drop-in replacement for Perl's O(n) goto
 
 =head1 DESCRIPTION
 
-C<Goto::Cached> provides a fast, lexically-scoped drop-in replacement for Perl's
+Goto::Cached provides a fast, lexically-scoped drop-in replacement for Perl's
 builtin C<goto>. Its use is the same as the builtin. C<goto &sub> and jumps out
 of the current scope (including C<if> and C<unless> blocks) are not cached.
 
@@ -70,7 +70,7 @@ of the current scope (including C<if> and C<unless> blocks) are not cached.
 
 chocolateboy <chocolate@cpan.org>
 
-=head1 COPYRIGHT
+=head1 COPYRIGHT AND LICENSE
 
 Copyright (c) 2005-2010 by chocolateboy.
 
